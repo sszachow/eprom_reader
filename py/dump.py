@@ -1,4 +1,5 @@
 import serial
+import string
 from time import sleep, localtime, strftime
 
 ROOT_DIR = ".."
@@ -17,19 +18,26 @@ def get_data(addr, ser):
     return ord(data)
 
 
-ser = serial.Serial('/dev/ttyACM0', 115200, timeout = 2)
-ser.flushInput()
-ser.flushOutput()
+def dump_rom():
+    ser = serial.Serial('/dev/ttyACM0', 115200, timeout = 2)
+    ser.flushInput()
+    ser.flushOutput()
 
-f = open('%s/%s/module_%s_prom_%s_%s.txt' % (ROOT_DIR, DUMPS_DIR, MODULE, PROM, strftime("%Y%m%d_%H%M%S", localtime())), 'w')
+    filename = '%s/%s/module_%s_prom_%s_%s' % (ROOT_DIR, DUMPS_DIR, MODULE, PROM, strftime("%Y%m%d_%H%M%S", localtime()))
+    ftxt = open('%s.txt' % filename, 'w')
+    fhex = open('%s.hex' % filename, 'wb')
 
-for addr in xrange(0, 0x3fff + 1):
-    data = get_data(addr, ser)
-    f.write("A: 0x%s, D: 0x%s, D: %s\n" % (format(addr, '04x'), format(data, '02x'), data))
+    for addr in xrange(0, 0x3fff + 1):
+        data = get_data(addr, ser)
+        char = chr(data) if chr(data) in string.printable[:-5] else '?'
+        ftxt.write("A: 0x%s, D: 0x%s, D: %s, D: %s\n" % (format(addr, '04x'), format(data, '02x'), data, char))
+        fhex.write(chr(data))
 
-ser.close()
-f.close()
+    ser.close()
+    ftxt.close()
+    fhex.close()
 
 
-
+if __name__ == '__main__':
+    dump_rom()
 
