@@ -1,6 +1,7 @@
 import serial
 import string
 from time import sleep, localtime, strftime
+from sys import exit
 
 ROOT_DIR = ".."
 DUMPS_DIR = "dumps"
@@ -18,10 +19,25 @@ def get_data(addr, ser):
     return ord(data)
 
 
+def set_link(sequence, ser):
+    for i in sequence:
+        ser.write(chr(i))
+    
+    res = ser.read()
+    
+    if res == 'K':
+        print "Link init successful."
+    else:
+        print "Link init failed."
+        exit(1)
+
+
 def dump_rom():
     ser = serial.Serial('/dev/ttyACM0', 115200, timeout = 2)
     ser.flushInput()
     ser.flushOutput()
+
+    set_link([0xaa, 0x55, 0xaa], ser)
 
     filename = '%s/%s/module_%s_prom_%s_%s' % (ROOT_DIR, DUMPS_DIR, MODULE, PROM, strftime("%Y%m%d_%H%M%S", localtime()))
     fhex = open('%s.hex' % filename, 'wb')
