@@ -8,71 +8,53 @@
 #include "am27c.h"
 #include "sys.h"
 
-void init_am27c_ports(void) {
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+#define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
 
-    ROM_GPIOPinTypeGPIOOutput(P_A13, A13);
-    ROM_GPIOPinTypeGPIOOutput(P_A12, A12);
-    ROM_GPIOPinTypeGPIOOutput(P_A11, A11);
-    ROM_GPIOPinTypeGPIOOutput(P_A10, A10);
-    ROM_GPIOPinTypeGPIOOutput(P_A9, A9);
-    ROM_GPIOPinTypeGPIOOutput(P_A8, A8);
-    ROM_GPIOPinTypeGPIOOutput(P_A7, A7);
-    ROM_GPIOPinTypeGPIOOutput(P_A6, A6);
-    ROM_GPIOPinTypeGPIOOutput(P_A5, A5);
-    ROM_GPIOPinTypeGPIOOutput(P_A4, A4);
-    ROM_GPIOPinTypeGPIOOutput(P_A3, A3);
-    ROM_GPIOPinTypeGPIOOutput(P_A2, A2);
-    ROM_GPIOPinTypeGPIOOutput(P_A1, A1);
-    ROM_GPIOPinTypeGPIOOutput(P_A0, A0);
+static const unsigned long PERIPH[] = {SYSCTL_PERIPH_GPIOA, SYSCTL_PERIPH_GPIOB,
+                                            SYSCTL_PERIPH_GPIOC, SYSCTL_PERIPH_GPIOD,
+                                            SYSCTL_PERIPH_GPIOE, SYSCTL_PERIPH_GPIOF};
+
+static const unsigned long A_PORTS[] = {P_A0, P_A1, P_A2, P_A3, P_A4, P_A5, P_A6,
+                                        P_A7, P_A8, P_A9, P_A10, P_A11, P_A12, P_A13};
+
+static const unsigned char A_PINS[] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13};
+
+static const unsigned long DQ_PORTS[] = {P_DQ0, P_DQ1, P_DQ2, P_DQ3, P_DQ4, P_DQ5, P_DQ6, P_DQ7};
+
+static const unsigned char DQ_PINS[] = {DQ0, DQ1, DQ2, DQ3, DQ4, DQ5, DQ6, DQ7};
+
+static const unsigned long CTL_PORTS[] = {P_PGM, P_OE, P_CE};
+
+static const unsigned char CTL_PINS[] = {PGM, OE, CE};
+
+
+void init_am27c_ports(void) {
+    unsigned char i;
+    
+    for(i = 0; i < NELEMS(PERIPH); i++)
+        ROM_SysCtlPeripheralEnable(PERIPH[i]);
+
+    for(i = 0; i < NELEMS(A_PORTS); i++)
+        ROM_GPIOPinTypeGPIOOutput(A_PORTS[i], A_PINS[i]);
 
     HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY_DD;
     HWREG(GPIO_PORTF_BASE + GPIO_O_CR) |= 0x01;
     HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0;
 
-    ROM_GPIOPinTypeGPIOInput(P_DQ7, DQ7);
-    ROM_GPIOPinTypeGPIOInput(P_DQ6, DQ6);
-    ROM_GPIOPinTypeGPIOInput(P_DQ5, DQ5);
-    ROM_GPIOPinTypeGPIOInput(P_DQ4, DQ4);
-    ROM_GPIOPinTypeGPIOInput(P_DQ3, DQ3);
-    ROM_GPIOPinTypeGPIOInput(P_DQ2, DQ2);
-    ROM_GPIOPinTypeGPIOInput(P_DQ1, DQ1);
-    ROM_GPIOPinTypeGPIOInput(P_DQ0, DQ0);
+    for(i = 0; i < NELEMS(DQ_PORTS); i++) {
+        ROM_GPIOPinTypeGPIOInput(DQ_PORTS[i], DQ_PINS[i]);
+        ROM_GPIOPadConfigSet(DQ_PORTS[i], DQ_PINS[i], GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    }
 
-    ROM_GPIOPadConfigSet(P_DQ7, DQ7, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ6, DQ6, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ5, DQ5, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ4, DQ4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ3, DQ3, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ2, DQ2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ1, DQ1, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-    ROM_GPIOPadConfigSet(P_DQ0, DQ0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-
-    ROM_GPIOPinTypeGPIOOutput(P_PGM, PGM);
-    ROM_GPIOPinTypeGPIOOutput(P_OE, OE);
-    ROM_GPIOPinTypeGPIOOutput(P_CE, CE);
+    for(i = 0; i < NELEMS(CTL_PORTS); i++)
+        ROM_GPIOPinTypeGPIOOutput(CTL_PORTS[i], CTL_PINS[i]);
 }
 
 void am27c_set_addr(unsigned short addr) {
-    set_pin(P_A13, A13, addr>>13);
-    set_pin(P_A12, A12, addr>>12);
-    set_pin(P_A11, A11, addr>>11);
-    set_pin(P_A10, A10, addr>>10);
-    set_pin(P_A9, A9, addr>>9);
-    set_pin(P_A8, A8, addr>>8);
-    set_pin(P_A7, A7, addr>>7);
-    set_pin(P_A6, A6, addr>>6);
-    set_pin(P_A5, A5, addr>>5);
-    set_pin(P_A4, A4, addr>>4);
-    set_pin(P_A3, A3, addr>>3);
-    set_pin(P_A2, A2, addr>>2);
-    set_pin(P_A1, A1, addr>>1);
-    set_pin(P_A0, A0, addr);
+    unsigned char i;
+    
+    for(i = 0; i < NELEMS(A_PORTS); i++)
+        set_pin(A_PORTS[i], A_PINS[i], addr>>i);
 }
 
 void init_am27c(void) {
@@ -104,6 +86,7 @@ unsigned char am27c_get_data(unsigned short addr) {
     unsigned char data = 0x00;
     
     am27c_set_addr(addr);
+    delay_us(1);
     set_pin(P_OE, OE, 0);
     delay_us(1);
     data = read_data();

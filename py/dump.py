@@ -5,8 +5,8 @@ from time import sleep, localtime, strftime
 ROOT_DIR = ".."
 DUMPS_DIR = "dumps"
 
-MODULE = 1
-PROM = 1
+MODULE = 3
+PROM = 2
 
 def get_data(addr, ser):
     higher = chr((addr & 0xFF00) >> 8)
