@@ -6,8 +6,8 @@ from sys import exit
 ROOT_DIR = ".."
 DUMPS_DIR = "dumps"
 
-MODULE = 3
-PROM = 2
+MODULE = 4
+PROM = 1
 
 def get_data(addr, ser):
     higher = chr((addr & 0xFF00) >> 8)
@@ -42,7 +42,7 @@ def dump_rom():
     filename = '%s/%s/module_%s_prom_%s_%s' % (ROOT_DIR, DUMPS_DIR, MODULE, PROM, strftime("%Y%m%d_%H%M%S", localtime()))
     fhex = open('%s.hex' % filename, 'wb')
 
-    for addr in xrange(0, 0x3fff + 1):
+    for addr in xrange(0, 0x1fff + 1):
         data = get_data(addr, ser)
         fhex.write(chr(data))
 
