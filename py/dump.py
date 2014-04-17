@@ -7,7 +7,7 @@ ROOT_DIR = ".."
 DUMPS_DIR = "dumps"
 
 MODULE = 4
-PROM = 1
+PROM = 'circle'
 
 def get_data(addr, ser):
     higher = chr((addr & 0xFF00) >> 8)
